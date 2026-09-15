@@ -1,0 +1,13 @@
+{
+  "indicators": [
+    {"type": "ip", "value": "185.220.101.7", "category": "known_tor_exit_node", "confidence": 0.9, "source": "mock_ti_feed"},
+    {"type": "ip", "value": "45.83.64.1", "category": "known_scanner", "confidence": 0.85, "source": "mock_ti_feed"},
+    {"type": "ip", "value": "198.51.100.23", "category": "c2_infrastructure", "confidence": 0.95, "source": "mock_ti_feed"},
+    {"type": "domain", "value": "malicious-update-server.example", "category": "malware_c2", "confidence": 0.9, "source": "mock_ti_feed"},
+    {"type": "domain", "value": "phish-login-portal.example", "category": "phishing", "confidence": 0.88, "source": "mock_ti_feed"},
+    {"type": "hash", "value": "e99a18c428cb38d5f260853678922e03", "category": "known_malware_md5", "confidence": 0.97, "source": "mock_ti_feed"},
+    {"type": "port", "value": "4444", "category": "common_c2_port", "confidence": 0.6, "source": "mock_ti_feed"},
+    {"type": "port", "value": "3389", "category": "rdp_brute_force_target", "confidence": 0.5, "source": "mock_ti_feed"}
+  ],
+  "notes": "This is a synthetic/mock threat-intelligence dataset created for CyberSentinel AI demo purposes. It does not reflect real, current threat intelligence and must not be used for real security decisions."
+}

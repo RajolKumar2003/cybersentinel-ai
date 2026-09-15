@@ -1,0 +1,61 @@
+# Default stack: backend (SQLite) + frontend (Streamlit). This is a
+# deliberate deviation from a literal "backend, frontend, postgres, vector
+# database" 4-service layout: SQLite and the local numpy vector store need
+# no server process, so requiring Postgres/Qdrant containers just to run
+# the demo would add operational weight with no benefit at this project's
+# scale. A real Postgres service is included below behind the "postgres"
+# profile for anyone who wants to exercise that path — start it with
+# `docker compose --profile postgres up --build` and set DATABASE_URL
+# accordingly in .env first.
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./cybersentinel.db}
+    volumes:
+      - ./ml/artifacts:/app/ml/artifacts
+      - backend-data:/app/data/vector_store
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "8501:8501"
+    environment:
+      - CYBERSENTINEL_API_URL=http://backend:8000/api/v1
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["postgres"]
+    environment:
+      - POSTGRES_USER=cybersentinel
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      - POSTGRES_DB=cybersentinel
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cybersentinel"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  backend-data:
+  postgres-data:

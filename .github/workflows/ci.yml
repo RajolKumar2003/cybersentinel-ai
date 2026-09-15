@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: |
+            backend/requirements.txt
+            ml/requirements.txt
+
+      - name: Install backend + ml dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt -r ml/requirements.txt
+
+      - name: Lint (ruff)
+        run: ruff check backend/app ml
+
+      - name: Format check (black)
+        run: black --check backend/app ml
+
+      - name: Type check (mypy)
+        run: mypy backend/app
+        continue-on-error: true  # advisory until the codebase is fully annotated
+
+      - name: Generate synthetic data
+        run: python ml/generate_synthetic_data.py
+
+      - name: Train anomaly models
+        run: python ml/train_anomaly_models.py
+
+      - name: Unit tests
+        run: pytest backend/tests/unit -v
+
+      - name: Integration tests
+        run: pytest backend/tests/integration -v
+
+      - name: API tests
+        run: pytest backend/tests/api -v
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -f backend/Dockerfile -t cybersentinel-backend:ci .
+
+      - name: Build frontend image
+        run: docker build -f frontend/Dockerfile -t cybersentinel-frontend:ci .
