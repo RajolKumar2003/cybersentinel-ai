@@ -21,11 +21,25 @@ import pandas as pd
 import requests
 import streamlit as st
 
-API_BASE_URL = os.environ.get("CYBERSENTINEL_API_URL", "http://localhost:8000/api/v1")
-
 st.set_page_config(page_title="CyberSentinel AI", page_icon="🛡️", layout="wide")
 
-# --- Minimal enterprise-style theming (avoids default Streamlit look) ------
+# --- Embedded-backend mode (for Streamlit Community Cloud) -----------------
+# Streamlit Cloud only runs one process and exposes one port, so it can't
+# host a separate FastAPI server the way local dev or a real deployment
+# does. Setting CYBERSENTINEL_EMBEDDED_BACKEND=1 (as a Streamlit Cloud
+# secret/env var) starts the real, unmodified FastAPI backend in a
+# background thread inside this same process — see backend_runner.py for
+# why this doesn't compromise the architecture. Local development is
+# unaffected: without this env var set, behavior is exactly as before
+# (point CYBERSENTINEL_API_URL at a separately-running backend, or default
+# to localhost:8000).
+if os.environ.get("CYBERSENTINEL_EMBEDDED_BACKEND") == "1":
+    from backend_runner import start_backend
+
+    with st.spinner("Starting backend (first load trains the ML models — can take ~30-60s)..."):
+        API_BASE_URL = start_backend()
+else:
+    API_BASE_URL = os.environ.get("CYBERSENTINEL_API_URL", "http://localhost:8000/api/v1")
 st.markdown(
     """
     <style>

@@ -1,0 +1,41 @@
+# Deployment requirements for Streamlit Community Cloud.
+#
+# This file is deliberately leaner than backend/requirements.txt: it
+# excludes packages the running application never imports at runtime
+# (alembic, matplotlib — scaffolding for future migrations/plots that
+# aren't wired into any code path yet), packages only needed for optional
+# upgrades this project doesn't use by default (psycopg — Postgres;
+# sentence-transformers/faiss-cpu/torch — the optional real-embedding
+# path, see docs/rag.md; httpx — only needed for the optional real LLM
+# provider), and dev-only tooling (pytest, ruff, black, mypy). Keeping
+# this lean matters specifically on Streamlit Cloud's free tier, where a
+# multi-hundred-MB torch install can hit build time/resource limits.
+#
+# If you switch LLM_PROVIDER=openai_compatible or an embedding provider
+# other than the default local_hashing one, add httpx / sentence-transformers
+# / faiss-cpu back in here.
+
+# --- Web framework (runs embedded in-process on Streamlit Cloud; see
+#     frontend/backend_runner.py) ---
+fastapi==0.115.0
+uvicorn==0.30.6
+pydantic==2.9.2
+pydantic-settings==2.5.2
+
+# --- Database (SQLite — no server needed) ---
+sqlalchemy==2.0.35
+
+# --- ML / anomaly detection ---
+scikit-learn==1.5.2
+numpy==2.1.1
+pandas==2.2.2
+joblib==1.4.2
+
+# --- Agentic orchestration ---
+langgraph==0.2.34
+langchain-core==0.3.6
+
+# --- Frontend ---
+streamlit==1.38.0
+requests==2.32.3
+plotly==5.24.0
