@@ -28,28 +28,22 @@ Two design decisions matter more than any individual feature:
 
 ## Architecture
 
-Network / Security Events
-│
-▼
-ML Anomaly Detection (Isolation Forest + Mahalanobis / Multivariate Gaussian)
-│
-▼
-Security Incident created (DB)
-│
-▼
-5-Agent LangGraph Investigation Pipeline
-├─ Log Investigation Agent → suspicious patterns, temporal analysis
-├─ Threat Intelligence Agent → local indicator-of-compromise dataset
-├─ RAG Knowledge Agent → semantic search over incident playbooks
-├─ Root Cause Analysis Agent → rule-based classification + confidence
-└─ Response Recommendation Agent → action, priority, risk, rollback plan
-│
-▼
-Human Review — Approve / Reject
-│
-▼
-Simulated Response Action + Immutable Audit Log
-
+```mermaid
+flowchart TD
+    A[Network / Security Events] --> B[ML Anomaly Detection<br/>Isolation Forest + Mahalanobis MVN]
+    B --> C[Security Incident created in DB]
+    C --> D[5-Agent LangGraph Investigation Pipeline]
+    D --> D1[Log Investigation Agent<br/>suspicious patterns, temporal analysis]
+    D --> D2[Threat Intelligence Agent<br/>local indicator-of-compromise dataset]
+    D --> D3[RAG Knowledge Agent<br/>semantic search over incident playbooks]
+    D1 --> E[Root Cause Analysis Agent<br/>rule-based classification + confidence]
+    D2 --> E
+    D3 --> E
+    E --> F[Response Recommendation Agent<br/>action, priority, risk, rollback plan]
+    F --> G{Human Review}
+    G -->|Approve| H[Simulated Response Action + Audit Log]
+    G -->|Reject| I[Incident Closed, No Action]
+```
 
 Full technical detail: [`docs/architecture.md`](docs/architecture.md) · [`docs/agents.md`](docs/agents.md) · [`docs/rag.md`](docs/rag.md) · [`docs/ml.md`](docs/ml.md) · [`docs/api.md`](docs/api.md) · [`docs/deployment.md`](docs/deployment.md) · [`docs/responsible_ai.md`](docs/responsible_ai.md)
 
@@ -94,31 +88,35 @@ Trained and evaluated on 4,210 synthetic events (4,000 normal + 210 across four 
 
 ## Project structure
 
+```text
 cybersentinel-ai/
-├── backend/
-│ ├── app/
-│ │ ├── api/v1/ REST endpoints (events, incidents, documents, metrics, health)
-│ │ ├── agents/ The 5-agent LangGraph pipeline + shared state
-│ │ ├── anomaly_detection/ Isolation Forest + Mahalanobis detectors, feature engineering
-│ │ ├── rag/ Chunking, embeddings, vector store, ingestion
-│ │ ├── models/ SQLAlchemy ORM models
-│ │ ├── schemas/ Pydantic request/response contracts
-│ │ ├── services/ Business logic — incident lifecycle, severity scoring, LLM provider
-│ │ ├── db/ Engine/session management
-│ │ └── core/ Configuration
-│ └── tests/{unit,integration,api}/
-├── frontend/
-│ ├── app.py 9-page Streamlit dashboard
-│ ├── backend_runner.py Embeds the FastAPI backend for single-app cloud deployment
-│ └── simulate_event.py Live-demo "Simulate an Incident" generator
-├── ml/ Synthetic data generation + model training scripts
-├── data/ Sample events, knowledge base, mock threat-intel dataset
-├── docs/ Architecture, API, agents, RAG, ML, deployment, responsible-AI docs
-├── .github/workflows/ci.yml
-├── Dockerfile (backend/, frontend/), docker-compose.yml
-├── runtime.txt, requirements.txt Streamlit Cloud deployment config
-└── README.md, LICENSE, SECURITY.md, CONTRIBUTING.md, INTERVIEW.md
-
+  backend/
+    app/
+      api/v1/             - REST endpoints (events, incidents, documents, metrics, health)
+      agents/              - The 5-agent LangGraph pipeline + shared state
+      anomaly_detection/   - Isolation Forest + Mahalanobis detectors, feature engineering
+      rag/                 - Chunking, embeddings, vector store, ingestion
+      models/              - SQLAlchemy ORM models
+      schemas/             - Pydantic request/response contracts
+      services/            - Business logic: incident lifecycle, severity scoring, LLM provider
+      db/                  - Engine/session management
+      core/                - Configuration
+    tests/
+      unit/
+      integration/
+      api/
+  frontend/
+    app.py                 - 9-page Streamlit dashboard
+    backend_runner.py      - Embeds the FastAPI backend for single-app cloud deployment
+    simulate_event.py      - Live-demo "Simulate an Incident" generator
+  ml/                      - Synthetic data generation + model training scripts
+  data/                    - Sample events, knowledge base, mock threat-intel dataset
+  docs/                    - Architecture, API, agents, RAG, ML, deployment, responsible-AI docs
+  .github/workflows/ci.yml
+  Dockerfile (backend/, frontend/), docker-compose.yml
+  runtime.txt, requirements.txt   - Streamlit Cloud deployment config
+  README.md, LICENSE, SECURITY.md, CONTRIBUTING.md, INTERVIEW.md
+```
 
 ## Getting started
 
