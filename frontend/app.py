@@ -101,6 +101,30 @@ st.sidebar.caption(
 # --- Pages --------------------------------------------------------------------
 if page == "Dashboard":
     st.title("Security Operations Dashboard")
+
+    with st.container(border=True):
+        st.markdown("**Try it live:** generate a random anomalous network event and watch it flow through the full pipeline.")
+        c_btn, c_msg = st.columns([1, 3])
+        if c_btn.button("🎲 Simulate an Incident", type="primary"):
+            from simulate_event import generate_random_anomalous_event
+
+            event = generate_random_anomalous_event()
+            result = api_post("/events", event)
+            if result:
+                if result["incident_created"]:
+                    st.session_state["selected_incident"] = result["incident_id"]
+                    c_msg.success(
+                        f"Incident **{result['incident_id']}** created "
+                        f"(anomaly score {result['anomaly_prediction']['anomaly_score']:.2f}). "
+                        "Go to **Incident Details** to run the AI investigation."
+                    )
+                else:
+                    c_msg.info(
+                        "Event ingested but the detector didn't flag it as anomalous this time "
+                        "— genuinely unsupervised detection, not guaranteed to catch every synthetic "
+                        "anomaly. Click the button again to try another random event."
+                    )
+
     metrics = api_get("/metrics")
     if metrics:
         c1, c2, c3, c4 = st.columns(4)
