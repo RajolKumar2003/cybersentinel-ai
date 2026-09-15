@@ -8,6 +8,7 @@ one path actually exercised by this sandbox's tests. `sentence_transformers`
 is available as a strictly-better optional upgrade (semantic, not just
 lexical, similarity) when that package is installed.
 """
+
 from __future__ import annotations
 
 import hashlib

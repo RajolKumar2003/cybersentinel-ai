@@ -3,6 +3,7 @@ state. This is what graph.py's LangGraph StateGraph wires together node-by-
 node; kept as a plain function too so the agent logic itself is fully
 testable in any environment, with or without LangGraph installed.
 """
+
 from __future__ import annotations
 
 from app.agents.log_investigation_agent import run_log_investigation_agent

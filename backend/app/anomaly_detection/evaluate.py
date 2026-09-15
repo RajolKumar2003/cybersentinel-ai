@@ -6,6 +6,7 @@ numbers in this project — anything reported in docs/README is copy-pasted
 from an actual run of this module and is explicitly labeled as demo-data
 performance, per project ground rules (no fabricated benchmarks).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -24,7 +25,9 @@ class EvaluationReport:
     confusion_matrix: list[list[int]]  # [[TN, FP], [FN, TP]]
     n_samples: int
     n_actual_anomalies: int
-    note: str = "Computed on synthetic demo data (data/sample/network_events.csv). Not validated on real traffic."
+    note: str = (
+        "Computed on synthetic demo data (data/sample/network_events.csv). Not validated on real traffic."
+    )
 
     def as_dict(self) -> dict:
         return {

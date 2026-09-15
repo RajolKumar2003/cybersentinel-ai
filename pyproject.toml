@@ -11,6 +11,10 @@ src = ["backend/app", "backend/tests", "ml"]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["E501"]
 
+
+[tool.ruff.lint.per-file-ignores]
+"backend/app/api/v1/*.py" = ["B008"]
+
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true

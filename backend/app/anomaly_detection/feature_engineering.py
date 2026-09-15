@@ -7,6 +7,7 @@ deliberately simple and inspectable — every feature has a stated reason for
 existing, since "explainability" for this project means being able to say
 exactly why an event was flagged.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -44,7 +45,9 @@ def build_feature_matrix(df: pd.DataFrame) -> pd.DataFrame:
     # bytes_per_packet: exfiltration has huge byte_count with moderate
     # packet_count; port scans have tiny packets. This ratio separates them
     # from normal traffic more cleanly than either raw column alone.
-    features["bytes_per_packet"] = (df["byte_count"] / df["packet_count"].replace(0, 1)).astype(float)
+    features["bytes_per_packet"] = (df["byte_count"] / df["packet_count"].replace(0, 1)).astype(
+        float
+    )
 
     # is_privileged_port: brute force / scanning activity concentrates on
     # low, well-known ports (22, 3389, <1024).

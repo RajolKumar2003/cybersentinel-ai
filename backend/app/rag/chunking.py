@@ -3,11 +3,12 @@
 Document -> Parsing -> Chunking -> Metadata -> (embeddings happen in the
 vector store module).
 """
+
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -20,7 +21,7 @@ class Chunk:
     section: str | None
     text: str
     chunk_index: int
-    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 def chunk_text(text: str, max_chars: int = 700, overlap: int = 100) -> list[str]:

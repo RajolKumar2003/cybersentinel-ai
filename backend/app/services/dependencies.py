@@ -4,6 +4,7 @@ Loaded once per process (via functools.lru_cache) rather than per-request:
 the anomaly models, vector store, and TI dataset are read-only reference
 data, and re-loading them per-request would be wasted work.
 """
+
 from __future__ import annotations
 
 import json
@@ -48,6 +49,8 @@ def get_ti_indicators() -> list[dict]:
 def get_llm() -> LLMProvider:
     settings = get_settings()
     return get_llm_provider(
-        provider=settings.llm_provider, api_key=settings.llm_api_key,
-        base_url=settings.llm_base_url, model_name=settings.llm_model_name,
+        provider=settings.llm_provider,
+        api_key=settings.llm_api_key,
+        base_url=settings.llm_base_url,
+        model_name=settings.llm_model_name,
     )

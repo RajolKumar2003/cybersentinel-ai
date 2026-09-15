@@ -3,6 +3,7 @@
 Checks event indicators (source/destination IP, port) against the local
 mock threat-intelligence dataset. No paid external TI API required or used.
 """
+
 from __future__ import annotations
 
 import json
@@ -11,7 +12,9 @@ from typing import Any
 
 from app.agents.state import InvestigationState
 
-DEFAULT_TI_PATH = Path(__file__).resolve().parents[3] / "data" / "threat_intel" / "mock_indicators.json"
+DEFAULT_TI_PATH = (
+    Path(__file__).resolve().parents[3] / "data" / "threat_intel" / "mock_indicators.json"
+)
 
 
 def _load_ti_dataset(path: Path = DEFAULT_TI_PATH) -> list[dict[str, Any]]:

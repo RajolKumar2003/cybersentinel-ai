@@ -1,6 +1,7 @@
 """Pydantic v2 schemas — API request/response contracts. Kept in one module
 for the same reason as models/orm.py: this project's schema count doesn't
 justify per-resource files yet."""
+
 from __future__ import annotations
 
 from datetime import datetime

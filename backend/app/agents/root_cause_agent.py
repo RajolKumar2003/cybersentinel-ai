@@ -8,6 +8,7 @@ unsupported LLM claim — the LLM provider is used only afterward, to turn
 the already-computed facts into a readable write-up (see reasoning_summary).
 Hidden chain-of-thought is never exposed; only this evidence-based summary is.
 """
+
 from __future__ import annotations
 
 from app.agents.state import InvestigationState
@@ -33,7 +34,10 @@ def _score_hypotheses(state: InvestigationState) -> dict[str, float]:
 
     if "scanning" in patterns or triggering.get("connection_rate", 0) > 20:
         scores["port_scan"] += 0.6
-    if triggering.get("destination_port", 0) < 1024 and triggering.get("status") in ("REFUSED", "TIMEOUT"):
+    if triggering.get("destination_port", 0) < 1024 and triggering.get("status") in (
+        "REFUSED",
+        "TIMEOUT",
+    ):
         scores["port_scan"] += 0.2
 
     if "bulk data transfer" in patterns or triggering.get("byte_count", 0) > 5_000_000:
@@ -50,7 +54,9 @@ def _score_hypotheses(state: InvestigationState) -> dict[str, float]:
             scores[leader] = min(1.0, scores[leader] + 0.2)
 
     if all(v == 0 for v in scores.values()):
-        scores["unknown"] = 0.5  # explicit "insufficient evidence" state, not a guess dressed up as one
+        scores["unknown"] = (
+            0.5  # explicit "insufficient evidence" state, not a guess dressed up as one
+        )
 
     return scores
 
@@ -63,7 +69,11 @@ def run_root_cause_agent(state: InvestigationState, llm: LLMProvider) -> Investi
     # Confidence is capped and reduced when there's no grounding evidence at
     # all (no RAG match, no TI match, no log patterns) — the system should
     # say it's unsure rather than confidently guess.
-    has_any_evidence = bool(state.get("suspicious_patterns") or state.get("temporal_relationships") or state.get("ti_matches"))
+    has_any_evidence = bool(
+        state.get("suspicious_patterns")
+        or state.get("temporal_relationships")
+        or state.get("ti_matches")
+    )
     confidence = min(top_score, 0.95) if has_any_evidence else 0.2
 
     evidence: list[str] = []
@@ -77,14 +87,19 @@ def run_root_cause_agent(state: InvestigationState, llm: LLMProvider) -> Investi
         top_doc = state["retrieved_documents"][0]
         evidence.append(f"Matched playbook: {top_doc['title']} (relevance {top_doc['score']:.2f})")
     if not evidence:
-        evidence.append("No supporting log patterns, threat-intel matches, or playbook matches were found.")
+        evidence.append(
+            "No supporting log patterns, threat-intel matches, or playbook matches were found."
+        )
 
     alternatives = [
-        {"hypothesis": name, "score": round(score, 2)}
-        for name, score in ranked[1:3] if score > 0
+        {"hypothesis": name, "score": round(score, 2)} for name, score in ranked[1:3] if score > 0
     ]
 
-    label = "insufficient evidence to determine a root cause" if top_cause == "unknown" else top_cause.replace("_", " ")
+    label = (
+        "insufficient evidence to determine a root cause"
+        if top_cause == "unknown"
+        else top_cause.replace("_", " ")
+    )
 
     user_prompt = (
         f"Root cause classification: {label}. Confidence: {confidence:.0%}.\n"
@@ -103,7 +118,10 @@ def run_root_cause_agent(state: InvestigationState, llm: LLMProvider) -> Investi
     state["alternative_hypotheses"] = alternatives
     state["reasoning_summary"] = llm_response.text
     state.setdefault("agent_trace", []).append(
-        {"agent_name": "root_cause_analysis", "status": "completed",
-         "output": {"root_cause": label, "confidence": confidence, "alternatives": alternatives}}
+        {
+            "agent_name": "root_cause_analysis",
+            "status": "completed",
+            "output": {"root_cause": label, "confidence": confidence, "alternatives": alternatives},
+        }
     )
     return state

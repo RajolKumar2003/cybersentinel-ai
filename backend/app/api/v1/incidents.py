@@ -40,8 +40,10 @@ def get_incident(incident_id: str, db: Session = Depends(get_db)):
 
 @router.post("/{incident_id}/investigate", response_model=InvestigationOut)
 def investigate_incident(
-    incident_id: str, db: Session = Depends(get_db),
-    vector_store=Depends(get_vector_store), llm=Depends(get_llm),
+    incident_id: str,
+    db: Session = Depends(get_db),
+    vector_store=Depends(get_vector_store),
+    llm=Depends(get_llm),
 ):
     incident = _get_incident_or_404(db, incident_id)
     if incident.investigation_status == "completed":
@@ -96,7 +98,9 @@ def get_recommendation(incident_id: str, db: Session = Depends(get_db)):
         .first()
     )
     if rec is None:
-        raise HTTPException(status_code=404, detail="No recommendation yet — run /investigate first")
+        raise HTTPException(
+            status_code=404, detail="No recommendation yet — run /investigate first"
+        )
     return rec
 
 

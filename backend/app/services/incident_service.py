@@ -6,10 +6,11 @@ development sandbox (no sqlalchemy installed, no network to install it) and
 should be the first thing verified with `pytest backend/tests/integration`
 once dependencies are installed.
 """
+
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
@@ -78,14 +79,19 @@ def ingest_event_and_maybe_create_incident(
 
 
 def run_investigation(
-    db: Session, incident: models.Incident, vector_store: NumpyVectorStore, llm: LLMProvider,
+    db: Session,
+    incident: models.Incident,
+    vector_store: NumpyVectorStore,
+    llm: LLMProvider,
     related_events: list[dict],
 ) -> models.Investigation:
     from app.agents.pipeline import run_investigation_pipeline
 
-    triggering_event_row = db.query(models.NetworkEvent).filter(
-        models.NetworkEvent.id == incident.anomaly_prediction.event_id
-    ).first()
+    triggering_event_row = (
+        db.query(models.NetworkEvent)
+        .filter(models.NetworkEvent.id == incident.anomaly_prediction.event_id)
+        .first()
+    )
     triggering = {
         c.name: getattr(triggering_event_row, c.name) for c in models.NetworkEvent.__table__.columns
     }
@@ -103,24 +109,28 @@ def run_investigation(
     result_state = run_investigation_pipeline(state, vector_store, llm)
 
     for trace_entry in result_state.get("agent_trace", []):
-        db.add(models.AgentRun(
-            investigation_id=investigation.id,
-            agent_name=trace_entry["agent_name"],
-            status=trace_entry["status"],
-            output=trace_entry.get("output", {}),
-        ))
+        db.add(
+            models.AgentRun(
+                investigation_id=investigation.id,
+                agent_name=trace_entry["agent_name"],
+                status=trace_entry["status"],
+                output=trace_entry.get("output", {}),
+            )
+        )
 
     for rank, doc in enumerate(result_state.get("retrieved_documents", [])):
-        db.add(models.RetrievedDocument(
-            investigation_id=investigation.id,
-            document_id=doc["document_id"],
-            chunk_text=doc["text"],
-            relevance_score=doc["score"],
-            rank=rank,
-        ))
+        db.add(
+            models.RetrievedDocument(
+                investigation_id=investigation.id,
+                document_id=doc["document_id"],
+                chunk_text=doc["text"],
+                relevance_score=doc["score"],
+                rank=rank,
+            )
+        )
 
     investigation.status = "completed"
-    investigation.completed_at = datetime.now(timezone.utc)
+    investigation.completed_at = datetime.now(UTC)
     investigation.root_cause = result_state.get("probable_root_cause")
     investigation.root_cause_confidence = result_state.get("root_cause_confidence")
     investigation.evidence_summary = result_state.get("reasoning_summary")
@@ -129,15 +139,17 @@ def run_investigation(
     incident.investigation_status = "completed"
     incident.recommended_action = result_state.get("recommended_action")
 
-    db.add(models.Recommendation(
-        incident_id=incident.id,
-        recommended_action=result_state.get("recommended_action", ""),
-        priority=result_state.get("priority", "medium"),
-        risk=result_state.get("risk", "medium"),
-        expected_impact=result_state.get("expected_impact", ""),
-        rollback_recommendation=result_state.get("rollback_recommendation", ""),
-        requires_human_approval=result_state.get("requires_human_approval", True),
-    ))
+    db.add(
+        models.Recommendation(
+            incident_id=incident.id,
+            recommended_action=result_state.get("recommended_action", ""),
+            priority=result_state.get("priority", "medium"),
+            risk=result_state.get("risk", "medium"),
+            expected_impact=result_state.get("expected_impact", ""),
+            rollback_recommendation=result_state.get("rollback_recommendation", ""),
+            requires_human_approval=result_state.get("requires_human_approval", True),
+        )
+    )
 
     db.commit()
     db.refresh(investigation)
@@ -157,17 +169,19 @@ def approve_or_reject_incident(
         status="simulated_executed" if approved else "rejected",
         approved_by=approved_by,
         simulated=True,
-        decided_at=datetime.now(timezone.utc),
+        decided_at=datetime.now(UTC),
     )
     db.add(action)
 
-    db.add(models.AuditLog(
-        actor=approved_by,
-        action="approve_incident" if approved else "reject_incident",
-        resource_type="incident",
-        resource_id=incident.incident_id,
-        details={"action_type": action.action_type},
-    ))
+    db.add(
+        models.AuditLog(
+            actor=approved_by,
+            action="approve_incident" if approved else "reject_incident",
+            resource_type="incident",
+            resource_id=incident.incident_id,
+            details={"action_type": action.action_type},
+        )
+    )
 
     db.commit()
     db.refresh(action)

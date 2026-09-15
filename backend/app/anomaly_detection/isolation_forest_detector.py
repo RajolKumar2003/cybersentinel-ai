@@ -1,4 +1,5 @@
 """Isolation Forest anomaly detector."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,8 +16,8 @@ MODEL_VERSION = "isolation_forest_v1"
 
 @dataclass
 class DetectionResult:
-    scores: np.ndarray          # higher = more anomalous, normalized to [0, 1]
-    predictions: np.ndarray     # 1 = anomaly, 0 = normal
+    scores: np.ndarray  # higher = more anomalous, normalized to [0, 1]
+    predictions: np.ndarray  # 1 = anomaly, 0 = normal
     model_version: str
     feature_names: list[str]
 
@@ -40,7 +41,7 @@ class IsolationForestDetector:
         )
         self._fitted = False
 
-    def fit(self, df: pd.DataFrame) -> "IsolationForestDetector":
+    def fit(self, df: pd.DataFrame) -> IsolationForestDetector:
         X = build_feature_matrix(df)
         X_scaled = self.scaler.fit_transform(X)
         self.model.fit(X_scaled)
@@ -62,8 +63,10 @@ class IsolationForestDetector:
 
         predictions = (self.model.predict(X_scaled) == -1).astype(int)
         return DetectionResult(
-            scores=scores, predictions=predictions,
-            model_version=MODEL_VERSION, feature_names=ALL_FEATURES,
+            scores=scores,
+            predictions=predictions,
+            model_version=MODEL_VERSION,
+            feature_names=ALL_FEATURES,
         )
 
     def feature_importance_for_event(self, df_row: pd.DataFrame) -> dict[str, float]:
@@ -74,4 +77,4 @@ class IsolationForestDetector:
         """
         X = build_feature_matrix(df_row)
         X_scaled = self.scaler.transform(X)[0]
-        return {name: float(abs(val)) for name, val in zip(ALL_FEATURES, X_scaled)}
+        return {name: float(abs(val)) for name, val in zip(ALL_FEATURES, X_scaled, strict=False)}

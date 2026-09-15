@@ -1,5 +1,6 @@
 """RAG ingestion pipeline: Document -> Parsing -> Chunking -> Metadata ->
 Embeddings -> Vector Database."""
+
 from __future__ import annotations
 
 import uuid

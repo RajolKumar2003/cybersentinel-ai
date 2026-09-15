@@ -22,7 +22,8 @@ def ingest_event(
         db, payload.model_dump(), detector, ti_indicators
     )
     return EventIngestResponse(
-        event=event, anomaly_prediction=prediction,
+        event=event,
+        anomaly_prediction=prediction,
         incident_created=incident is not None,
         incident_id=incident.incident_id if incident else None,
     )

@@ -6,6 +6,7 @@ No secrets, credentials, or API keys are hard-coded anywhere in this file
 or anywhere else in the codebase — that is a hard project rule enforced
 by code review / CI secret-scanning conventions documented in SECURITY.md.
 """
+
 from __future__ import annotations
 
 from functools import lru_cache

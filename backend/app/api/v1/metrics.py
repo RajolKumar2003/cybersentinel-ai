@@ -19,11 +19,24 @@ router = APIRouter(prefix="", tags=["metrics"])
 @router.get("/metrics", response_model=MetricsOut)
 def get_metrics(db: Session = Depends(get_db)):
     total = db.query(func.count(models.Incident.id)).scalar() or 0
-    critical = db.query(func.count(models.Incident.id)).filter(models.Incident.severity == "critical").scalar() or 0
-    resolved = db.query(func.count(models.Incident.id)).filter(models.Incident.status == "resolved").scalar() or 0
-    anomaly_count = db.query(func.count(models.AnomalyPrediction.id)).filter(
-        models.AnomalyPrediction.prediction == 1
-    ).scalar() or 0
+    critical = (
+        db.query(func.count(models.Incident.id))
+        .filter(models.Incident.severity == "critical")
+        .scalar()
+        or 0
+    )
+    resolved = (
+        db.query(func.count(models.Incident.id))
+        .filter(models.Incident.status == "resolved")
+        .scalar()
+        or 0
+    )
+    anomaly_count = (
+        db.query(func.count(models.AnomalyPrediction.id))
+        .filter(models.AnomalyPrediction.prediction == 1)
+        .scalar()
+        or 0
+    )
 
     durations = (
         db.query(models.Investigation.started_at, models.Investigation.completed_at)
@@ -42,8 +55,11 @@ def get_metrics(db: Session = Depends(get_db)):
             detector_metrics = json.load(f)
 
     return MetricsOut(
-        total_incidents=total, critical_incidents=critical, anomaly_count=anomaly_count,
-        resolved_incidents=resolved, average_investigation_time_seconds=avg_seconds,
+        total_incidents=total,
+        critical_incidents=critical,
+        anomaly_count=anomaly_count,
+        resolved_incidents=resolved,
+        average_investigation_time_seconds=avg_seconds,
         detector_metrics=detector_metrics,
     )
 
@@ -70,6 +86,9 @@ def health_check(db: Session = Depends(get_db)):
     settings = get_settings()
     status = "ok" if (db_ok and models_ok and store_ok) else "degraded"
     return HealthOut(
-        status=status, database=db_ok, anomaly_models_loaded=models_ok,
-        vector_store_loaded=store_ok, llm_provider=settings.llm_provider,
+        status=status,
+        database=db_ok,
+        anomaly_models_loaded=models_ok,
+        vector_store_loaded=store_ok,
+        llm_provider=settings.llm_provider,
     )

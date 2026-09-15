@@ -9,6 +9,7 @@ are not installed there and there is no network to install them) — it is
 written to FastAPI's current API and `uvicorn app.main:app --app-dir backend`
 should be the first command run against it locally.
 """
+
 from __future__ import annotations
 
 import time
@@ -52,7 +53,9 @@ async def rate_limit_middleware(request: Request, call_next):
     _request_log[client_ip] = [t for t in _request_log[client_ip] if now - t < window]
 
     if len(_request_log[client_ip]) >= settings.rate_limit_per_minute:
-        return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded. Try again shortly."})
+        return JSONResponse(
+            status_code=429, content={"detail": "Rate limit exceeded. Try again shortly."}
+        )
 
     _request_log[client_ip].append(now)
     return await call_next(request)

@@ -1,4 +1,5 @@
 """Database engine/session setup. SQLite by default; Postgres via DATABASE_URL."""
+
 from __future__ import annotations
 
 from collections.abc import Generator

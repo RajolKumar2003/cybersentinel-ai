@@ -4,10 +4,11 @@ Kept in one module deliberately (11 tables, mostly simple, heavily
 cross-referenced) — splitting into 11 tiny files would add navigation cost
 without adding clarity for a project this size.
 """
+
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -20,7 +21,7 @@ def _uuid() -> str:
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class User(Base):
@@ -52,7 +53,7 @@ class NetworkEvent(Base):
     status: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    anomaly_predictions: Mapped[list["AnomalyPrediction"]] = relationship(back_populates="event")
+    anomaly_predictions: Mapped[list[AnomalyPrediction]] = relationship(back_populates="event")
 
 
 class AnomalyPrediction(Base):
@@ -65,8 +66,8 @@ class AnomalyPrediction(Base):
     feature_contributions: Mapped[dict] = mapped_column(JSON, default=dict)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    event: Mapped["NetworkEvent"] = relationship(back_populates="anomaly_predictions")
-    incident: Mapped["Incident"] = relationship(back_populates="anomaly_prediction", uselist=False)
+    event: Mapped[NetworkEvent] = relationship(back_populates="anomaly_predictions")
+    incident: Mapped[Incident] = relationship(back_populates="anomaly_prediction", uselist=False)
 
 
 class Incident(Base):
@@ -79,19 +80,23 @@ class Incident(Base):
     affected_service: Mapped[str] = mapped_column(String)
     anomaly_score: Mapped[float] = mapped_column(Float)
     event_summary: Mapped[str] = mapped_column(Text)
-    status: Mapped[str] = mapped_column(String, default="open")  # open | investigating | resolved | closed
+    status: Mapped[str] = mapped_column(
+        String, default="open"
+    )  # open | investigating | resolved | closed
     investigation_status: Mapped[str] = mapped_column(String, default="not_started")
     recommended_action: Mapped[str | None] = mapped_column(Text, nullable=True)
-    analyst_decision: Mapped[str | None] = mapped_column(String, nullable=True)  # approved | rejected | pending
+    analyst_decision: Mapped[str | None] = mapped_column(
+        String, nullable=True
+    )  # approved | rejected | pending
 
     anomaly_prediction_id: Mapped[str | None] = mapped_column(
         ForeignKey("anomaly_predictions.id"), nullable=True
     )
-    anomaly_prediction: Mapped["AnomalyPrediction | None"] = relationship(back_populates="incident")
+    anomaly_prediction: Mapped[AnomalyPrediction | None] = relationship(back_populates="incident")
 
-    investigations: Mapped[list["Investigation"]] = relationship(back_populates="incident")
-    recommendations: Mapped[list["Recommendation"]] = relationship(back_populates="incident")
-    response_actions: Mapped[list["ResponseAction"]] = relationship(back_populates="incident")
+    investigations: Mapped[list[Investigation]] = relationship(back_populates="incident")
+    recommendations: Mapped[list[Recommendation]] = relationship(back_populates="incident")
+    response_actions: Mapped[list[ResponseAction]] = relationship(back_populates="incident")
 
 
 class Investigation(Base):
@@ -106,16 +111,20 @@ class Investigation(Base):
     evidence_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     alternative_hypotheses: Mapped[dict] = mapped_column(JSON, default=list)
 
-    incident: Mapped["Incident"] = relationship(back_populates="investigations")
-    agent_runs: Mapped[list["AgentRun"]] = relationship(back_populates="investigation")
-    retrieved_documents: Mapped[list["RetrievedDocument"]] = relationship(back_populates="investigation")
+    incident: Mapped[Incident] = relationship(back_populates="investigations")
+    agent_runs: Mapped[list[AgentRun]] = relationship(back_populates="investigation")
+    retrieved_documents: Mapped[list[RetrievedDocument]] = relationship(
+        back_populates="investigation"
+    )
 
 
 class AgentRun(Base):
     __tablename__ = "agent_runs"
     id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
     investigation_id: Mapped[str] = mapped_column(ForeignKey("investigations.id"), index=True)
-    agent_name: Mapped[str] = mapped_column(String)  # log_investigation | threat_intel | rag_knowledge | root_cause | response_recommendation
+    agent_name: Mapped[str] = mapped_column(
+        String
+    )  # log_investigation | threat_intel | rag_knowledge | root_cause | response_recommendation
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[str] = mapped_column(String, default="running")
@@ -123,7 +132,7 @@ class AgentRun(Base):
     output: Mapped[dict] = mapped_column(JSON, default=dict)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    investigation: Mapped["Investigation"] = relationship(back_populates="agent_runs")
+    investigation: Mapped[Investigation] = relationship(back_populates="agent_runs")
 
 
 class Document(Base):
@@ -147,7 +156,7 @@ class RetrievedDocument(Base):
     relevance_score: Mapped[float] = mapped_column(Float)
     rank: Mapped[int] = mapped_column(Integer)
 
-    investigation: Mapped["Investigation"] = relationship(back_populates="retrieved_documents")
+    investigation: Mapped[Investigation] = relationship(back_populates="retrieved_documents")
 
 
 class Recommendation(Base):
@@ -162,22 +171,26 @@ class Recommendation(Base):
     requires_human_approval: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
-    incident: Mapped["Incident"] = relationship(back_populates="recommendations")
+    incident: Mapped[Incident] = relationship(back_populates="recommendations")
 
 
 class ResponseAction(Base):
     __tablename__ = "response_actions"
     id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
     incident_id: Mapped[str] = mapped_column(ForeignKey("incidents.id"), index=True)
-    action_type: Mapped[str] = mapped_column(String)  # block_ip | isolate_host | create_ticket | escalate
+    action_type: Mapped[str] = mapped_column(
+        String
+    )  # block_ip | isolate_host | create_ticket | escalate
     target: Mapped[str] = mapped_column(String)
-    status: Mapped[str] = mapped_column(String, default="pending")  # pending | approved | rejected | simulated_executed
+    status: Mapped[str] = mapped_column(
+        String, default="pending"
+    )  # pending | approved | rejected | simulated_executed
     approved_by: Mapped[str | None] = mapped_column(String, nullable=True)
     simulated: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    incident: Mapped["Incident"] = relationship(back_populates="response_actions")
+    incident: Mapped[Incident] = relationship(back_populates="response_actions")
 
 
 class AuditLog(Base):

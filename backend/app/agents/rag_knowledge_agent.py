@@ -6,6 +6,7 @@ minimum relevance threshold so downstream agents know when there simply
 isn't good evidence (rag_grounded=False) rather than silently using weak
 matches as if they were solid.
 """
+
 from __future__ import annotations
 
 from app.agents.state import InvestigationState
@@ -35,15 +36,26 @@ def run_rag_knowledge_agent(
 
     state["retrieved_documents"] = [
         {
-            "document_id": r.document_id, "title": r.title, "source": r.source,
-            "section": r.section, "text": r.text, "score": r.score,
+            "document_id": r.document_id,
+            "title": r.title,
+            "source": r.source,
+            "section": r.section,
+            "text": r.text,
+            "score": r.score,
             "flagged_injection": r.flagged_injection,
         }
         for r in results
     ]
     state["rag_grounded"] = len(relevant) > 0
     state.setdefault("agent_trace", []).append(
-        {"agent_name": "rag_knowledge", "status": "completed",
-         "output": {"n_results": len(results), "n_above_threshold": len(relevant), "query": query}}
+        {
+            "agent_name": "rag_knowledge",
+            "status": "completed",
+            "output": {
+                "n_results": len(results),
+                "n_above_threshold": len(relevant),
+                "query": query,
+            },
+        }
     )
     return state

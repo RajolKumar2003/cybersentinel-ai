@@ -8,6 +8,7 @@ and demonstrate the MVN background this project draws on, and to give the
 comparison in docs/ml.md a genuinely different underlying method rather
 than two flavors of the same idea.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -48,7 +49,7 @@ class MahalanobisDetector:
         self.threshold_: float | None = None
         self._fitted = False
 
-    def fit(self, df: pd.DataFrame) -> "MahalanobisDetector":
+    def fit(self, df: pd.DataFrame) -> MahalanobisDetector:
         X = build_feature_matrix(df)
         X_scaled = self.scaler.fit_transform(X)
 
@@ -83,6 +84,8 @@ class MahalanobisDetector:
         predictions = (d2 > self.threshold_).astype(int)
 
         return DetectionResult(
-            scores=scores, predictions=predictions,
-            model_version=MODEL_VERSION, feature_names=ALL_FEATURES,
+            scores=scores,
+            predictions=predictions,
+            model_version=MODEL_VERSION,
+            feature_names=ALL_FEATURES,
         )

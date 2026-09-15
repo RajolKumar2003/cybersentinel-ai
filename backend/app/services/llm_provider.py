@@ -10,6 +10,7 @@ unlimited and free, and this project will not pretend otherwise.
 their own key (any OpenAI-compatible endpoint), used only if
 LLM_PROVIDER=openai_compatible is set.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -86,7 +87,10 @@ class OpenAICompatibleProvider(LLMProvider):
 
 
 def get_llm_provider(
-    provider: str = "mock", api_key: str | None = None, base_url: str | None = None, model_name: str = "mock-security-analyst-v1"
+    provider: str = "mock",
+    api_key: str | None = None,
+    base_url: str | None = None,
+    model_name: str = "mock-security-analyst-v1",
 ) -> LLMProvider:
     if provider == "mock":
         return MockLLMProvider()

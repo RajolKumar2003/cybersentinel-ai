@@ -11,14 +11,15 @@ current LangGraph (>=0.2) API and should be verified with
 `python -c "from app.agents.graph import build_graph"` as the first thing
 you run once dependencies are installed locally.
 """
+
 from __future__ import annotations
 
 from langgraph.graph import END, StateGraph
 
 from app.agents.log_investigation_agent import run_log_investigation_agent
+from app.agents.rag_knowledge_agent import run_rag_knowledge_agent
 from app.agents.response_recommendation_agent import run_response_recommendation_agent
 from app.agents.root_cause_agent import run_root_cause_agent
-from app.agents.rag_knowledge_agent import run_rag_knowledge_agent
 from app.agents.state import InvestigationState
 from app.agents.threat_intel_agent import run_threat_intelligence_agent
 from app.rag.vector_store import NumpyVectorStore

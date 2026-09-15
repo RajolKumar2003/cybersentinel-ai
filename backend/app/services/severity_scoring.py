@@ -6,6 +6,7 @@ analyst on sight. Rules and weights below are the full scoring model —
 nothing else feeds into severity. Documented identically in
 docs/agents.md so the code and the docs cannot drift apart.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -21,12 +22,16 @@ class SeverityResult:
     reasons: list[str]
 
 
-def compute_severity(event: dict[str, Any], anomaly_score: float, ti_match_found: bool) -> SeverityResult:
+def compute_severity(
+    event: dict[str, Any], anomaly_score: float, ti_match_found: bool
+) -> SeverityResult:
     score = 0
     reasons: list[str] = []
 
     score += int(anomaly_score * 40)
-    reasons.append(f"anomaly_score={anomaly_score:.2f} contributes {int(anomaly_score * 40)} points")
+    reasons.append(
+        f"anomaly_score={anomaly_score:.2f} contributes {int(anomaly_score * 40)} points"
+    )
 
     if ti_match_found:
         score += 25

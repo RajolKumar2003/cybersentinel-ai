@@ -5,6 +5,7 @@ source/destination IP, identifies suspicious patterns, and summarizes
 temporal relationships. Pure Python / pandas-free logic so it's testable
 without any of the missing heavy dependencies.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -46,11 +47,13 @@ def run_log_investigation_agent(state: InvestigationState) -> InvestigationState
 
     if related:
         timestamps = sorted(_parse_ts(e) for e in related + [triggering])
-        gaps = [(timestamps[i + 1] - timestamps[i]).total_seconds() for i in range(len(timestamps) - 1)]
+        gaps = [
+            (timestamps[i + 1] - timestamps[i]).total_seconds() for i in range(len(timestamps) - 1)
+        ]
         if gaps:
             mean_gap = sum(gaps) / len(gaps)
             variance = sum((g - mean_gap) ** 2 for g in gaps) / len(gaps)
-            if mean_gap > 0 and (variance ** 0.5) / mean_gap < 0.15 and len(gaps) >= 3:
+            if mean_gap > 0 and (variance**0.5) / mean_gap < 0.15 and len(gaps) >= 3:
                 temporal.append(
                     f"{len(timestamps)} events occur at a near-constant interval "
                     f"(~{mean_gap:.0f}s, low variance) — consistent with automated/beaconing behavior "
@@ -78,7 +81,10 @@ def run_log_investigation_agent(state: InvestigationState) -> InvestigationState
     state["suspicious_patterns"] = patterns
     state["temporal_relationships"] = temporal
     state.setdefault("agent_trace", []).append(
-        {"agent_name": "log_investigation", "status": "completed",
-         "output": {"patterns": patterns, "temporal": temporal}}
+        {
+            "agent_name": "log_investigation",
+            "status": "completed",
+            "output": {"patterns": patterns, "temporal": temporal},
+        }
     )
     return state
